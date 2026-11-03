@@ -182,14 +182,20 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
 **Moment 1**
 
 - *What I asked for:*
+I asked for Claude to review some of functions in stylometry.py.
 - *What came back:*
+Claude revised the functions and showed some improvements.
 - *What I changed:*
+I decided to use Claude's improvements.
 
 **Moment 2**
 
 - *What I asked for:*
+I asked Claude to review and check my criteria.
 - *What came back:*
+Clause revised one criterion to be more objective.
 - *What I changed:*
+I accepted the revision and added a numerical value to said criterion.
 
 <!-- ═══════════════════════ UNIT 8 — THE TEST ═══════════════════════ -->
 
