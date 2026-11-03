@@ -42,65 +42,38 @@ Two things worth knowing before you pick numbers:
   a **miss**.
 
 ---
-## 1.
-
-<!-- Your criterion. It must name a number. -->
-
-
+## 1. False positives occur at most 1 in 10 times
 
 **Why this target:**
-
-
+Wrongly labeling a human's writing as AI is the most harmful mistake this system can make, because it can lead to an unfair accusation. A 10% ceiling is strict enough to protect writers but realistic for a two-signal detector, and the appeal process covers the cases that slip through.
 
 ---
 
-## 2.
-
-<!-- Your criterion. -->
-
-
+## 2. In a diverse sample of 10 entries, each outcome label should appear at least once
 
 **Why this target:**
-
-
+If one label never shows up across varied inputs, the thresholds are likely miscalibrated, for example everything collapsing into "unsure." Seeing all three labels confirms the score ranges actually separate different kinds of text.
 
 ---
 
-## 3.
-
-<!-- Your criterion. -->
-
-
+## 3. Empty input text or input text exceeding 500 words is rejected 5 of 5 times
 
 **Why this target:**
-
-
+Input validation is deterministic, so there is no reason for it to ever fail and the target should be 100%. Empty text can't be scored meaningfully, and very long text slows the model signal.
 
 ---
 
-## 4.
-
-<!-- Your criterion. -->
-
-
+## 4. Clearly-AI and clearly-human text have a minimum final score difference of 0.4 4 of 5 times
 
 **Why this target:**
-
-
+A 0.4 gap is wide enough to move a text from one confident label to the other, which shows the combined score is actually telling the two apart rather than clustering in the middle. Allowing one miss in five accounts for the natural noise in perplexity and style scoring.
 
 ---
 
-## 5.
-
-<!-- Your criterion. -->
-
-
+## 5. An appeal request is logged and returns a decision 5 of 5 times
 
 **Why this target:**
-
-
-
----
+The appeal is the safety net for false positives, so it has to work every time, since a lost appeal leaves a wrongly labeled writer with no recourse. Logging every request also creates a record for reviewing how often and where the detector gets it wrong.
 
 <!-- ─────────────────────────────────────────────────────────────────────────
      UNIT 8 — read this before you change anything above.
