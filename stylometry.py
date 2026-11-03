@@ -33,6 +33,18 @@ anything together:
 import re
 import statistics
 
+# Calibration: raw value at the AI end scores 1.0, at the human end 0.0.
+SPREAD_AI, SPREAD_HUMAN = 0.15, 0.75   # coefficient of variation of sentence lengths
+TTR_AI, TTR_HUMAN = 0.55, 0.85         # moving-window type-token ratio
+PUNCT_AI, PUNCT_HUMAN = 0.0, 0.04      # ; : ( ) and dashes per word
+TTR_WINDOW = 50
+STYLE_WEIGHTS = {"spread": 0.45, "ttr": 0.35, "punct": 0.20}
+
+
+def _ai_scale(value: float, ai_end: float, human_end: float) -> float:
+    """Map a raw measure onto 0–1, where 1 is the AI-like end."""
+    frac = (value - human_end) / (ai_end - human_end)
+    return max(0.0, min(1.0, frac))
 
 def sentences(text: str) -> list[str]:
     """Split into sentences. Rough and good enough — given to you."""
@@ -64,8 +76,12 @@ def sentence_length_spread(text: str) -> float:
     `stdev` raises on fewer than two values. Decide what that should return
     before the attack set decides for you.
     """
-    # TODO: replace this
-    return 0.0
+    lengths = [len(words(s)) for s in sentences(text)]
+    lengths = [n for n in lengths if n > 0]
+    # Under two sentences there's no spread to measure, so return the neutral midpoint
+    if len(lengths) < 2:
+        return (SPREAD_AI + SPREAD_HUMAN) / 2
+    return statistics.stdev(lengths) / (sum(lengths) / len(lengths))
 
 
 def type_token_ratio(text: str) -> float:
@@ -80,8 +96,17 @@ def type_token_ratio(text: str) -> float:
     directly comparable on it, and if your test inputs vary a lot in length,
     that alone can look like a signal.
     """
-    # TODO: replace this
-    return 0.0
+    tokens = words(text)
+    if not tokens:
+        return 0.0
+    if len(tokens) <= TTR_WINDOW:
+        return len(set(tokens)) / len(tokens)
+    # Average over sliding windows so long and short texts are comparable
+    ratios = [
+        len(set(tokens[i:i + TTR_WINDOW])) / TTR_WINDOW
+        for i in range(len(tokens) - TTR_WINDOW + 1)
+    ]
+    return sum(ratios) / len(ratios)
 
 
 def punctuation_density(text: str) -> float:
@@ -94,8 +119,11 @@ def punctuation_density(text: str) -> float:
         more interesting than full stops, because they vary more between
         writers.
     """
-    # TODO: replace this
-    return 0.0
+    tokens = words(text)
+    if not tokens:
+        return 0.0
+    marks = len(re.findall(r"[;:()\u2014\u2013]|--", text))
+    return marks / len(tokens)
 
 
 # ── Combining them ───────────────────────────────────────────────────────────
@@ -122,8 +150,12 @@ def style_signal(text: str) -> float:
     you trust it. Plain and ordinary, not formal: formal prose reads as *human*
     to signal one, and it is plain writing that gets accused.
     """
-    # TODO: replace this
-    return 0.5
+    parts = {
+        "spread": _ai_scale(sentence_length_spread(text), SPREAD_AI, SPREAD_HUMAN),
+        "ttr": _ai_scale(type_token_ratio(text), TTR_AI, TTR_HUMAN),
+        "punct": _ai_scale(punctuation_density(text), PUNCT_AI, PUNCT_HUMAN),
+    }
+    return sum(STYLE_WEIGHTS[k] * v for k, v in parts.items())
 
 
 if __name__ == "__main__":
