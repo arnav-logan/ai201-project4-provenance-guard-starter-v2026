@@ -38,8 +38,14 @@
 
 <!-- The path a submission takes, from arriving to the label a reader sees.
      Six or seven steps — this is the trace you wrote in Milestone 1. -->
+A backend service that recieves text and a score of how likely the text was AI-generated.
 
-
+Example path:
+1. A user submits text, which gets sent to the /submit endpoint
+2. The text is evaluated and the system generates a predictability and style signal
+3. The system calculates an 'AI-likeliness' score using the siganls
+4. The system will use the score to label the text as human, unsure, or likely AI then return the label to the user
+5. The user can see the label and submit an appeal if they believe it's a false positive
 
 ---
 
@@ -54,27 +60,34 @@
 ### Signal one — the model signal
 
 **What it measures:**
+How well the AI can predict parts of the text by analyzing preceeding sections. The resulting perplexity score measures how well the AI predicted the text (low perplexity meaning more predictable)
 
 **Why that might differ between human and AI writing:**
+AI writing will tend to have a lower perplexity as it generates texts by 'predicting' the next most-likely word. Human writing can be more unpredictable when ideas are expressed.
 
 **What it can't see:**
-
+Does not analyze the structure or meaning of text.
 ### Signal two — the style signal
 
 **What it measures:**
-
+Looks at the structure and style of text to determine how likely it is AI-generated.
 **Why that might differ between human and AI writing:**
-
+AI usually follows a certain sentence structure and style (such as "this, not that" and use of many adjectives) while human writers can have varied styles, vocabularies, and punctuation.
 **What it can't see:**
-
+Does not interpret the meaning of text.
 ### The combining rule
 
 <!-- Write the rule in words, then give the numbers. What happens when the two
      signals disagree? -->
 
 **The rule:**
+Each signal is converted to a score from 0 to 1, where higher means "more AI-like." The final score is a weighted average of the two, with the model signal counting for more because it is the stronger single indicator. If the two signals strongly disagree, the system does not trust either one enough to make a confident call, so the result is held in the "unsure" range no matter what the average says.
 
 **The numbers:**
+- Model signal score: perplexity mapped to 0–1 (low perplexity → close to 1)
+- Style signal score: 0–1 (more AI-typical patterns → close to 1)
+- Combined score = 0.6 × model score + 0.4 × style score
+- Disagreement check: if |model score − style score| > 0.4, the combined score is clamped to the unsure range (0.35–0.70)
 
 **Where it lives:** `scoring.py::combine_signals`
 
@@ -82,9 +95,9 @@
      somewhere else, say where. -->
 
 **A case where my two signals split, and what my rule does with it:**
+A student submits a formal lab report they wrote themselves. Lab reports follow a rigid template with standard phrasing ("The results indicate...", "This suggests..."), so the text is very predictable and the model signal scores it 0.85. But the writing has human quirks: uneven sentence lengths, a few comma splices, and an informal aside, so the style signal scores it 0.30.
 
-
-
+The weighted average is 0.6 × 0.85 + 0.4 × 0.30 = 0.63, which already falls in the unsure range. The gap between the signals is 0.55, which is over the 0.4 disagreement limit, so the score would be held in the unsure range even if the average had been higher. The user gets "unsure" instead of a false "likely AI" label.
 ---
 
 ## Label Variants
@@ -96,14 +109,15 @@
 
 | Label | Score range | The exact text a reader sees |
 |---|---|---|
-| high-confidence human |  |  |
-| unsure |  |  |
-| high-confidence AI |  |  |
+| high-confidence human | 0.00 – 0.34 | "This text reads like human writing. Our checks found little sign that it was produced by an AI tool." |
+| unsure | 0.35 – 0.70 | "The result is inconclusive. This text has some features common in AI writing and some common in human writing, and many people naturally write this way. This is not a finding that AI was used." |
+| high-confidence AI | 0.71 – 1.00 | "This text shows strong signs of being AI-generated. Our checks can be wrong, so if you wrote this yourself, you can request a review." |
 
 **Why I worded the "unsure" one this way:**
 <!-- It's the hardest of the three. It has to admit uncertainty without
      sounding like an accusation, because the person reading it may well have
      written every word themselves. -->
+The person reading the "unsure" label may well have written every word themselves, so the label has to admit the system's uncertainty without casting suspicion on them. It opens with "We can't tell" so the limitation belongs to the system, not the writer. It says the text has features of both kinds of writing, so it doesn't lean toward one side. "Many people naturally write this way" reminds the reader that formal, clear, or template-based writing often looks AI-like.
 
 
 
