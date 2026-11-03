@@ -138,10 +138,18 @@ The person reading the "unsure" label may well have written every word themselve
 ```bash
 $ curl -X POST http://127.0.0.1:5000/submit \
   -H "Content-Type: application/json" \
-  -d '{"text": "...", "creator_id": "..."}'
+  -d '{"text": "This is a piece of sample writing. It is being input to check if it was AI-generated. WOW.", "creator_id": "user-1"}'
 ```
 
 ```json
+{
+  "confidence": 0.0,
+  "content_id": "d5d704cc-31b7-4589-b454-1ba0bb9b78a2",
+  "guess": "pending",
+  "label": "pending",
+  "model_score": 0.2425,
+  "style_score": null
+}
 
 ```
 

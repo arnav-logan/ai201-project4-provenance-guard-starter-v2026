@@ -30,6 +30,7 @@ from flask import Flask, jsonify, request
 
 import audit
 import config
+import detector
 
 app = Flask(__name__)
 
@@ -201,15 +202,48 @@ def submit():
     """
     payload = request.get_json(silent=True) or {}
 
-    # TODO: delete this and build the route.
+    # Step 2: pull fields out of the payload
+    text = payload.get("text")
+    creator_id = payload.get("creator_id")
+
+    # Reject malformed input (README criterion 3: empty or over 500 words)
+    if not isinstance(text, str) or not text.strip():
+        return jsonify({"error": "invalid_input",
+                        "message": "Field 'text' is required and cannot be empty."}), 400
+    if len(text.split()) > 500:
+        return jsonify({"error": "invalid_input",
+                        "message": "Text must be 500 words or fewer."}), 400
+    if not creator_id:
+        return jsonify({"error": "invalid_input",
+                        "message": "Field 'creator_id' is required."}), 400
+
+    content_id = str(uuid.uuid4())
+
+    # Step 3: one real signal; the rest are placeholders until Milestones 4–5
+    model_score = detector.model_signal(text)
+    style_score = None
+    confidence = 0.0
+    label = "pending"
+    guess = "pending"
+
+    # Step 4: log every submission
+    audit.log_decision(
+        content_id=content_id,
+        creator_id=creator_id,
+        guess=guess,
+        model_score=model_score,
+        style_score=style_score,
+        label=label,
+    )
+
     return jsonify({
-        "error": "not_implemented",
-        "message": "POST /submit isn't built yet — see the TODO in app.py.",
-        "you_sent": {
-            "text_length": len(payload.get("text", "")),
-            "creator_id": payload.get("creator_id"),
-        },
-    }), 501
+        "content_id": content_id,
+        "guess": guess,
+        "confidence": confidence,
+        "label": label,
+        "model_score": model_score,
+        "style_score": style_score,
+    }), 200
 
 
 @app.post("/appeal")
