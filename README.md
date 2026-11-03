@@ -87,7 +87,7 @@ Each signal is converted to a score from 0 to 1, where higher means "more AI-lik
 - Model signal score: perplexity mapped to 0–1 (low perplexity → close to 1)
 - Style signal score: 0–1 (more AI-typical patterns → close to 1)
 - Combined score = 0.6 × model score + 0.4 × style score
-- Disagreement check: if |model score − style score| > 0.4, the combined score is clamped to the unsure range (0.35–0.70)
+- Disagreement check: if |model score − style score| > 0.4, the combined score is clamped to the unsure range (0.36–0.69)
 
 **Where it lives:** `scoring.py::combine_signals`
 
@@ -109,9 +109,9 @@ The weighted average is 0.6 × 0.85 + 0.4 × 0.30 = 0.63, which already falls in
 
 | Label | Score range | The exact text a reader sees |
 |---|---|---|
-| high-confidence human | 0.00 – 0.34 | "This text reads like human writing. Our checks found little sign that it was produced by an AI tool." |
+| high-confidence human | 0.00 – 0.35 | "This text reads like human writing. Our checks found little sign that it was produced by an AI tool." |
 | unsure | 0.35 – 0.70 | "The result is inconclusive. This text has some features common in AI writing and some common in human writing, and many people naturally write this way. This is not a finding that AI was used." |
-| high-confidence AI | 0.71 – 1.00 | "This text shows strong signs of being AI-generated. Our checks can be wrong, so if you wrote this yourself, you can request a review." |
+| high-confidence AI | 0.70 – 1.00 | "This text shows strong signs of being AI-generated. Our checks can be wrong, so if you wrote this yourself, you can request a review." |
 
 **Why I worded the "unsure" one this way:**
 <!-- It's the hardest of the three. It has to admit uncertainty without

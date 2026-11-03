@@ -210,12 +210,16 @@ def submit():
 
     # Reject malformed input (README criterion 3: empty or over 500 words)
     if not isinstance(text, str) or not text.strip():
+        audit.log_rejection(creator_id=creator_id, reason="empty_text")
         return jsonify({"error": "invalid_input",
                         "message": "Field 'text' is required and cannot be empty."}), 400
     if len(text.split()) > 500:
+        audit.log_rejection(creator_id=creator_id, reason="too_long",
+                            word_count=len(text.split()))
         return jsonify({"error": "invalid_input",
                         "message": "Text must be 500 words or fewer."}), 400
     if not creator_id:
+        audit.log_rejection(creator_id=None, reason="missing_creator_id")
         return jsonify({"error": "invalid_input",
                         "message": "Field 'creator_id' is required."}), 400
 
@@ -225,9 +229,8 @@ def submit():
     model_score = detector.model_signal(text)
     style_score = stylometry.style_signal(text)
     combined_score = scoring.combine_signals(model_score, style_score)
+    guess, label = scoring.score_to_label(combined_score)
     confidence = combined_score
-    label = "pending"
-    guess = "pending"
 
     audit.log_decision(
         content_id=content_id,
@@ -271,12 +274,30 @@ def appeal():
     """
     payload = request.get_json(silent=True) or {}
 
-    # TODO: delete this and build the route.
+    content_id = payload.get("content_id")
+    reasoning = payload.get("reasoning")
+
+    if not content_id or not isinstance(reasoning, str) or not reasoning.strip():
+        return jsonify({"error": "invalid_input",
+                        "message": "Both 'content_id' and 'reasoning' are required."}), 400
+
+    # Step 1: make sure the submission exists
+    entries = audit.entries_for(content_id)
+    if not entries:
+        return jsonify({"error": "not_found",
+                        "message": f"No submission found with content_id '{content_id}'."}), 404
+
+    # Step 2: record the appeal (moves the item to under_review)
+    creator_id = entries[0]["creator_id"]  # from the original decision
+    audit.log_appeal(content_id=content_id, creator_id=creator_id,
+                     reasoning=reasoning.strip())
+
+    # Step 3: confirm to the writer
     return jsonify({
-        "error": "not_implemented",
-        "message": "POST /appeal isn't built yet — see the TODO in app.py.",
-        "you_sent": payload,
-    }), 501
+        "content_id": content_id,
+        "status": "under_review",
+        "message": "Your appeal has been received. A person will review this decision.",
+    }), 200
 
 
 # ── Already works ─────────────────────────────────────────────────────────────
