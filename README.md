@@ -203,23 +203,36 @@ I accepted the revision and added a numerical value to said criterion.
 
 ## Rate Limiting
 
-**My limits:** ___ per minute, ___ per day
+**My limits:** 5 per minute, 200 per day
 
 **Why those numbers and not others:**
-<!-- Think about two people: a real writer submitting their own work a few
-     times an hour, and a script sending a thousand variations to map your
-     thresholds. Your numbers have to be liveable for the first and hostile to
-     the second. -->
+I lowered the per minute requests limit to 5 as users may want to check different inputs of text in a short period of time but 10 requests in a minute can slow down the system, so 5 is a good medium. I kept the max daily requests at 200 per day so normal users are quite unlikely to hit the limit but any malicious user will hit 200 requests quickly. 
 
 **What a caller counts as:** <!-- per address, or per creator_id? They fail
 differently — one script can look like a thousand callers, and one household
 can look like one. -->
+A caller will likely be identified by `creator_id` as each user will have a unique ID.
 
 **The run of status codes when I pushed past it:**
 
 <!-- python run_attacks.py --flood 15 -->
 
 ```
+[ 1/15] 200
+[ 2/15] 200
+[ 3/15] 200
+[ 4/15] 200
+[ 5/15] 200
+[ 6/15] 429
+[ 7/15] 429
+[ 8/15] 429
+[ 9/15] 429
+[10/15] 429
+[11/15] 429
+[12/15] 429
+[13/15] 429
+[14/15] 429
+[15/15] 429
 
 ```
 
