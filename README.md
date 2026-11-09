@@ -339,16 +339,99 @@ The worst outcome is when prompt injection succeeds. Not only is the user able t
 
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. my own writing | 9 of 10 | 10 of 10  | 10 of 10  | 10 of 10  | MET |
+| 2. label coverage | at least 1 (of each) of 10  | low 0 of 10  | low 0 of 10  | low 0 of 10  | MISSED |
+| 3. bad input | 5 of 5 | 5 of 5  | 5 of 5  | 5 of 5  | MET |
+| 4. AI vs human score difference | at least 0.4 difference |  0.58 | 0.58  | 0.58  | MET |
+| 5. Check for appeals | 5 of 5 | 5 of 5  |  5 of 5 | 5 of 5  | MET |
 
-**Real output from one trial**, pasted as text, naming the file and function
-that produced it:
+**Trial 1, Criteria 1** 
+Produced by: `run_eval.py::main`
 
 ```json
+[
+  {
+    "status": 200,
+    "guess": "unsure",
+    "confidence": 0.6171198899277137,
+    "model_score": 0.7639,
+    "style_score": 0.39694972481928426,
+    "label": "We can't tell either way. This text has some features common in AI writing and some common in human writing, and many people naturally write this way. This is not a finding that AI was used.",
+    "sent": "Planning is an essential aspect of doing any work. If one is working o"
+  },
+  {
+    "status": 200,
+    "guess": "unsure",
+    "confidence": 0.4546475306224526,
+    "model_score": 0.6769,
+    "style_score": 0.12126882655613168,
+    "label": "We can't tell either way. This text has some features common in AI writing and some common in human writing, and many people naturally write this way. This is not a finding that AI was used.",
+    "sent": "A man sits at a desk in a dimly lit room; he states blankly into a com"
+  },
+  {
+    "status": 200,
+    "guess": "unsure",
+    "confidence": 0.69,
+    "model_score": 0.899,
+    "style_score": 0.48148750276633845,
+    "label": "We can't tell either way. This text has some features common in AI writing and some common in human writing, and many people naturally write this way. This is not a finding that AI was used.",
+    "sent": "First, you need to gather the required ingredients: flour, sugar, eggs"
+  },
+  {
+    "status": 200,
+    "guess": "unsure",
+    "confidence": 0.603623088207135,
+    "model_score": 0.776,
+    "style_score": 0.3450577205178374,
+    "label": "We can't tell either way. This text has some features common in AI writing and some common in human writing, and many people naturally write this way. This is not a finding that AI was used.",
+    "sent": "Many people enjoy listening to music; whether just to relax or while d"
+  },
+  {
+    "status": 200,
+    "guess": "unsure",
+    "confidence": 0.36,
+    "model_score": 0.5207,
+    "style_score": 0.1053691276517379,
+    "label": "We can't tell either way. This text has some features common in AI writing and some common in human writing, and many people naturally write this way. This is not a finding that AI was used.",
+    "sent": "What is Art? Art is man-made. Art exists for art's sake (art is not cr"
+  },
+  {
+    "status": 200,
+    "guess": "unsure",
+    "confidence": 0.60088,
+    "model_score": 0.8223,
+    "style_score": 0.26875,
+    "label": "We can't tell either way. This text has some features common in AI writing and some common in human writing, and many people naturally write this way. This is not a finding that AI was used.",
+    "sent": "Actors generally belong to the union Screen Actors Guild (SAG) and the"
+  },
+  {
+    "status": 200,
+    "guess": "unsure",
+    "confidence": 0.36274996254681646,
+    "model_score": 0.5012,
+    "style_score": 0.15507490636704113,
+    "label": "We can't tell either way. This text has some features common in AI writing and some common in human writing, and many people naturally write this way. This is not a finding that AI was used.",
+    "sent": "Audition (low level) - most actors audition for a casting director by "
+  },
+  {
+    "status": 200,
+    "guess": "unsure",
+    "confidence": 0.633949090909091,
+    "model_score": 0.6334,
+    "style_score": 0.6347727272727274,
+    "label": "We can't tell either way. This text has some features common in AI writing and some common in human writing, and many people naturally write this way. This is not a finding that AI was used.",
+    "sent": "After looking it up, I found that the bridge collapse cost $42,000 at "
+  },
+  {
+    "status": 200,
+    "guess": "unsure",
+    "confidence": 0.5569657249196096,
+    "model_score": 0.5074,
+    "style_score": 0.6313143122990241,
+    "label": "We can't tell either way. This text has some features common in AI writing and some common in human writing, and many people naturally write this way. This is not a finding that AI was used.",
+    "sent": "I think some of the skills Keaton displays in the film is his acrobati"
+  }
+]
 
 ```
 
@@ -367,7 +450,7 @@ that produced it:
                         signal at 0.6, so it dragged the whole score down."
 
      Look for a pattern. Five failures on one signal is one problem, not five. -->
-
+Criterion 2 was missed likely due to the signal stage not being able to clearly identify human-written text or due to the label mapping having a too large 'unsure' range. Criterion 2 checks for at least 1 of each label appearing in a diverse set of 10 inputs (containing at least: 3 clearly AI, 3 clearly human, and 3 unsure) but the the 'human' label did not appear a single time while 'likely ai' appeared 3 times and 'unsure' appeared 7 times. Although the system tries to minimize false positives (flagging human-written text as AI-generated), this leads to there being too many 'unsure' outcomes, even when the input is definitely human-written.
 
 
 ---
